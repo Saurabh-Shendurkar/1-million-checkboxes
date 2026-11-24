@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1 Million Checkpoints Game</title>
+    <title>1 Million Checkboxes Game</title>
 </head>
 <body bgcolor="black">
+    <div id="container"></div>
     <script>
+        const checkbox_count=200
+        new Array(checkbox_count).fill(false).forEach((_,index)=>{
+            const input= document.createElement('input')
+            input.type="checkbox"
+            container.appendChild(input)
+        })
     </script>
 </body>
 </html>
