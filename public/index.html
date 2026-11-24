@@ -4,9 +4,345 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>1 Million Checkboxes Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #090d16;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --box-bg: rgba(255, 255, 255, 0.06);
+            --box-border: rgba(255, 255, 255, 0.16);
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --accent-glow: rgba(168, 85, 247, 0.45);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.25), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(168, 85, 247, 0.15), transparent),
+                radial-gradient(circle at 0% 100%, rgba(56, 189, 248, 0.12), transparent);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 40px 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Subtle matrix grid background overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 32px 32px;
+            z-index: 0;
+        }
+
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 860px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+
+        /* Header section */
+        .header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border-radius: 9999px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            color: #c7d2fe;
+            backdrop-filter: blur(8px);
+        }
+
+        .badge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        .title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            background: linear-gradient(135deg, #ffffff 25%, #c7d2fe 65%, #e9d5ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            max-width: 500px;
+            line-height: 1.5;
+        }
+
+        .meta-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .stat-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            font-size: 0.85rem;
+            font-family: var(--font-mono);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: var(--text-secondary);
+        }
+
+        .stat-chip .chip-value {
+            color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        .stat-chip .chip-value.live {
+            color: #4ade80;
+        }
+
+        /* Card holding the container */
+        .board-card {
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.65),
+                0 0 0 1px rgba(255, 255, 255, 0.04),
+                inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            transition: border-color 0.3s ease;
+        }
+
+        .board-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        /* Checkbox grid container */
+        #container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+            gap: 12px;
+            padding: 20px;
+            background: rgba(9, 13, 22, 0.6);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            max-height: 480px;
+            overflow-y: auto;
+            justify-items: center;
+            align-items: center;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Checkbox styling */
+        #container input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            margin: 0;
+            border-radius: 8px;
+            background-color: var(--box-bg);
+            border: 1.5px solid var(--box-border);
+            cursor: pointer;
+            display: inline-grid;
+            place-content: center;
+            position: relative;
+            outline: none;
+            transition: 
+                transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+                border-color 0.2s ease,
+                background-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        /* Hover effect */
+        #container input[type="checkbox"]:hover {
+            border-color: #818cf8;
+            background-color: rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 12px var(--accent-glow);
+            transform: scale(1.15);
+            z-index: 2;
+        }
+
+        /* Focus visible for accessibility */
+        #container input[type="checkbox"]:focus-visible {
+            outline: 2px solid #818cf8;
+            outline-offset: 3px;
+        }
+
+        /* Checked state with gradient and SVG tick */
+        #container input[type="checkbox"]:checked {
+            background: var(--primary-gradient);
+            border-color: #c084fc;
+            box-shadow: 
+                0 0 16px rgba(168, 85, 247, 0.6),
+                inset 0 1px 2px rgba(255, 255, 255, 0.4);
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='3.5 8.5 6.5 11.5 12.5 5.5'/%3e%3c/svg%3e");
+            background-size: 65% 65%;
+            background-position: center;
+            background-repeat: no-repeat;
+            transform: scale(1.05);
+        }
+
+        #container input[type="checkbox"]:checked:hover {
+            box-shadow: 
+                0 0 20px rgba(192, 132, 252, 0.85),
+                inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            transform: scale(1.2);
+        }
+
+        /* Active / tap effect */
+        #container input[type="checkbox"]:active {
+            transform: scale(0.9);
+            transition-duration: 0.05s;
+        }
+
+        /* Custom Scrollbar for container */
+        #container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+        }
+
+        #container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+        }
+
+        #container::-webkit-scrollbar-thumb:hover {
+            background: rgba(168, 85, 247, 0.45);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            body {
+                padding: 24px 12px;
+            }
+
+            .board-card {
+                padding: 16px;
+                border-radius: 18px;
+            }
+
+            #container {
+                grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+                gap: 8px;
+                padding: 12px;
+                max-height: 400px;
+            }
+
+            #container input[type="checkbox"] {
+                width: 26px;
+                height: 26px;
+                border-radius: 6px;
+            }
+        }
+    </style>
 </head>
-<body bgcolor="black">
-    <div id="container"></div>
+<body>
+    <div class="page-wrapper">
+        <header class="header">
+            <div class="badge">
+                <span class="badge-dot"></span>
+                <span>Interactive Matrix</span>
+            </div>
+            <h1 class="title">1 Million Checkboxes</h1>
+            <p class="subtitle">Click any checkbox to toggle. Every state change counts.</p>
+            <div class="meta-bar">
+                <div class="stat-chip">
+                    <span class="chip-label">Checkboxes:</span>
+                    <span class="chip-value">200</span>
+                </div>
+                <div class="stat-chip">
+                    <span class="chip-label">Status:</span>
+                    <span class="chip-value live">● Ready</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="board-card">
+            <div id="container"></div>
+        </main>
+
+        <footer class="footer">
+            <p>1 Million Checkboxes Game &bull; Modern UI Edition</p>
+        </footer>
+    </div>
+
     <script>
         const checkbox_count=200
         new Array(checkbox_count).fill(false).forEach((_,index)=>{
