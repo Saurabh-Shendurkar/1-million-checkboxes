@@ -11,4 +11,6 @@ const subscriber = createRedisConnection()
 
 const publisher = createRedisConnection()
 
-export { subscriber, publisher }
+const redis =createRedisConnection()
+
+export { subscriber, publisher , redis}
